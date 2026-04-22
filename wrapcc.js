@@ -12,7 +12,7 @@ function isOutputFlag(arg) {
 
 function toObjectFile(src) {
     const rel = src.replace(/^\.\//, "");
-    return path.join("build", rel + ".o");
+    return path.join(".build", rel + ".o");
 }
 
 function ensureDir(filePath) {
