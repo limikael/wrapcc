@@ -3,16 +3,16 @@ import path from "path";
 import fs from "fs";
 
 function isCppFile(arg) {
-    return arg.endsWith(".cpp");
+    return (arg.endsWith(".cpp") || arg.endsWith(".c"));
 }
 
 function isOutputFlag(arg) {
     return arg === "-o";
 }
 
-function toObjectFile(src) {
+function toObjectFile(src, buildDir) {
     const rel = src.replace(/^\.\//, "");
-    return path.join(".build", rel + ".o");
+    return path.join(buildDir, rel + ".o");
 }
 
 function ensureDir(filePath) {
@@ -20,7 +20,10 @@ function ensureDir(filePath) {
 }
 
 export async function wrapcc(argv, options={}) {
-    let {dryRun}=options;
+    let {dryRun,buildDir}=options;
+
+    let compiler=argv[0];
+    argv=argv.slice(1);
 
     const cppFiles = [];
     const compileArgs = [];
@@ -58,7 +61,7 @@ export async function wrapcc(argv, options={}) {
     }
 
     if (!outputBinary) {
-        throw new Error("ccwrap: missing -o output binary");
+        throw new Error("wrapcc: missing -o output binary");
     }
 
     // -----------------------------
@@ -69,14 +72,14 @@ export async function wrapcc(argv, options={}) {
     let promises=[];
 
     for (const file of cppFiles) {
-        const obj = toObjectFile(file);
+        const obj = toObjectFile(file,buildDir);
         if (!dryRun)
             ensureDir(obj);
         objectFiles.push(obj);
 
         if (dryRun) {
             console.log("ccache",[
-                "g++",
+                compiler,
                 ...compileArgs,
                 "-c",
                 file,
@@ -88,7 +91,7 @@ export async function wrapcc(argv, options={}) {
         else {
             // removed... push to promises
             await runCommand("ccache", [
-                "g++",
+                compiler,
                 ...compileArgs,
                 "-c",
                 file,
@@ -104,7 +107,7 @@ export async function wrapcc(argv, options={}) {
     // 3. Link step
     // -----------------------------
     if (dryRun) {
-        console.log("g++",[
+        console.log(compiler,[
             ...linkArgs,
             ...objectFiles,
             ...staticLibs
@@ -112,7 +115,7 @@ export async function wrapcc(argv, options={}) {
     }
 
     else {
-        await runCommand("g++", [
+        await runCommand(compiler, [
             ...linkArgs,
             ...objectFiles,
             ...staticLibs
