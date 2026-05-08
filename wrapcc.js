@@ -1,6 +1,7 @@
 import { runCommand } from "./node-utils.js";
 import path from "path";
 import fs from "fs";
+import {runInParallel} from "./js-util.js";
 
 function isCppFile(arg) {
     return (arg.endsWith(".cpp") || arg.endsWith(".c"));
@@ -69,7 +70,7 @@ export async function wrapcc(argv, options={}) {
     // -----------------------------
     const objectFiles = [];
 
-    let promises=[];
+    let jobs=[];
 
     for (const file of cppFiles) {
         const obj = toObjectFile(file,buildDir);
@@ -90,18 +91,21 @@ export async function wrapcc(argv, options={}) {
 
         else {
             // removed... push to promises
-            await runCommand("ccache", [
-                compiler,
-                ...compileArgs,
-                "-c",
-                file,
-                "-o",
-                obj
-            ]);
+            jobs.push(async ()=>{
+                //console.log(file);
+                await runCommand("ccache", [
+                    compiler,
+                    ...compileArgs,
+                    "-c",
+                    file,
+                    "-o",
+                    obj
+                ]);
+            });
         }
     }
 
-    await Promise.all(promises);
+    await runInParallel(jobs,4);
 
     // -----------------------------
     // 3. Link step

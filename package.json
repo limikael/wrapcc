@@ -15,5 +15,8 @@
   "packageManager": "pnpm@10.28.2",
   "dependencies": {
     "minimist": "^1.2.8"
+  },
+  "exports": {
+    ".": "./wrapcc.js"
   }
 }

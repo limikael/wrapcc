@@ -16,3 +16,28 @@ export function camelizeObject(o) {
 
     return res;
 }
+
+export async function runInParallel(jobs, parallelism=4) {
+    let index=0;
+    let results=new Array(jobs.length);
+
+    async function worker() {
+        while (true) {
+            let current=index++;
+
+            if (current>=jobs.length)
+                return;
+
+            results[current]=await jobs[current]();
+        }
+    }
+
+    let workers=[];
+
+    for (let i=0;i<parallelism;i++)
+        workers.push(worker());
+
+    await Promise.all(workers);
+
+    return results;
+}
