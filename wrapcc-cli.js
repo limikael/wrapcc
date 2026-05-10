@@ -5,11 +5,11 @@ import {camelizeObject} from "./js-util.js";
 
 let args=camelizeObject(minimist(process.argv.slice(2),{
 	stopEarly: true,
-	boolean: "dry-run",
-	string: "build-dir",
+	boolean: ["dry-run"],
+	string: ["build-dir", "linker"],
 	default: {
 		"dry-run": false,
-		"build-dir": ".build"
+		"build-dir": ".build",
 	},
 	unknown: s=>{
 		if (s.startsWith("-")) {

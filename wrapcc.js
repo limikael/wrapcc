@@ -26,6 +26,10 @@ export async function wrapcc(argv, options={}) {
     let compiler=argv[0];
     argv=argv.slice(1);
 
+    let linker=options.linker;
+    if (!linker)
+        linker=compiler;
+
     const cppFiles = [];
     const compileArgs = [];
     const linkArgs = [];
@@ -111,7 +115,7 @@ export async function wrapcc(argv, options={}) {
     // 3. Link step
     // -----------------------------
     if (dryRun) {
-        console.log(compiler,[
+        console.log(linker,[
             ...linkArgs,
             ...objectFiles,
             ...staticLibs
@@ -119,7 +123,7 @@ export async function wrapcc(argv, options={}) {
     }
 
     else {
-        await runCommand(compiler, [
+        await runCommand(linker, [
             ...linkArgs,
             ...objectFiles,
             ...staticLibs
